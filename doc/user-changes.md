@@ -6,6 +6,37 @@ stay on top of `alr` new features.
 
 ## Release `3.0`
 
+### New `--github` switch for `alr init` command
+
+PR [#1972](https://github.com/alire-project/alire/pull/1972)
+
+The `alr init` command now supports a `--github` switch to automatically
+generate GitHub files (README.md, workflows) for new crates. This can be
+controlled with `--github[=true/false]` or by setting the new built-in
+`init.github_files` setting.
+
+### Style checks disabled by default in all build profiles
+
+PR [#1919](https://github.com/alire-project/alire/pull/1919)
+
+Style checks are now disabled by default in all build profiles (release, validation, and development). Previously, style checks were enabled by default in the validation and development profiles. This change intends to avoid unwanted compiler errors related to style issues.
+
+To enable former style checks, you can use the `build-switches` table in your manifest:
+
+```toml
+[build-switches]
+"*".style_checks = "Yes"  # Enable for all profiles
+```
+
+Or for a specific profile:
+
+```toml
+[build-switches]
+validation.style_checks = "Yes"  # Enable only for validation profile
+```
+
+Alternatively, `gnatformat` is available in the community index to easily apply the default GNAT style.
+
 ### New `--builtin` switch for `alr settings`
 
 PR [#1912](https://github.com/alire-project/alire/pull/1912)
@@ -42,6 +73,23 @@ with `alr init` (this can be prevented with the `--no-test` flag).
 For backwards compatibility, running `alr test` without a `[test]` section in
 the manifest will still run local test actions, but they should be considered
 deprecated. The remote testing capabilities of `alr test` have been removed.
+
+### New self-update helper
+
+The `alr self-update` command will help users update the Alire binary more
+easily. It takes several optional command line flags:
+
+- `--location=<path/to/alr>` to specify where to install the new binary
+- `--release=<version>` to download and install a specific version (provided
+  that Alire builds binaries for this version on your platform) 
+- `--nightly` to install a pre-release version of Alire.
+  
+  **Disclaimer**: nightly versions may have incomplete features, unresolved
+  bugs and may delete features or break compatibility without warning.
+
+On Windows, updating the binary will launch a separate console window to
+perform the update. This is expected behavior, needed because Windows does not
+allow us to overwrite a running binary easily.
 
 ## Release `2.1`
 

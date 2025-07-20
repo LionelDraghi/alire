@@ -27,25 +27,29 @@ gnatcoll = "^21"
 lml = "~0.1"
 minirest = "~0.3"
 optional = "~0.1.1"
+resources = "~0.1"
 semantic_versioning = "^3.0"
 simple_logging = "^2.0"
 si_units = "~0.2.2"
+spdx = "~0.2"
 stopwatch = "~0.1"
+templates_parser = "^24" # Latests pre-Ada 2022 version
 toml_slicer = "~0.1"
 uri_ada = "^2.0"
-spdx = "~0.2"
 
-# For some reason static-pic is causing problems in CLIC
 [gpr-set-externals]
-CLIC_LIBRARY_TYPE="static"
+CLIC_LIBRARY_TYPE="static"  # Has problems with "static-pic" for some reason
 
-# Building alr requires the explicit setting of this variable
+# Building alr requires the explicit setting of these variables
+# ALIRE_OS required by alr
+# GNATCOLL_OS required by gnatcoll
+# PRJ_TARGET required by templates_parser
 [gpr-set-externals."case(os)"]
-freebsd = { ALIRE_OS = "freebsd" }
-openbsd = { ALIRE_OS = "openbsd" }
-linux   = { ALIRE_OS = "linux" }
-macos   = { ALIRE_OS = "macos" }
-windows = { ALIRE_OS = "windows" }
+freebsd = { ALIRE_OS = "freebsd", GNATCOLL_OS = "unix",    PRJ_TARGET = "FreeBSD" }
+openbsd = { ALIRE_OS = "openbsd", GNATCOLL_OS = "unix",    PRJ_TARGET = "UNIX" }
+linux   = { ALIRE_OS = "linux",   GNATCOLL_OS = "unix",    PRJ_TARGET = "Linux" }
+macos   = { ALIRE_OS = "macos",   GNATCOLL_OS = "osx",     PRJ_TARGET = "macOS" }
+windows = { ALIRE_OS = "windows", GNATCOLL_OS = "windows", PRJ_TARGET = "Windows" }
 "..."   = { ALIRE_OS = "unknown" } # Will cause the build to fail
 
 # Some dependencies require precise versions during the development cycle:
@@ -55,8 +59,8 @@ url    = "https://github.com/mosteo/aaa"
 commit = "73d99ae1ff2f5210dc41c2ea7afebe600f9e9916"
 
 [pins.ada_toml]
-url    = "https://github.com/pmderodat/ada-toml"
-commit = "e760110ad2b5b776a44dace31b8421532e429fbb"
+url    = "https://github.com/mosteo/ada-toml"
+commit = "33eaab64b9d531e240c3f525ad80a1f3eb8b9633"
 
 [pins.ansiada]
 url    = "https://github.com/mosteo/ansi-ada"
@@ -69,9 +73,10 @@ commit = "e4d58ad90bf32bc44304197e5906a519f5a9a7bf"
 [pins.clic]
 url    = "https://github.com/alire-project/clic"
 commit = "56bbdc008e16996b6f76e443fd0165a240de1b13"
+
 [pins.den]
 url    = "https://github.com/mosteo/den"
-commit = "377d1d906f83262b81b45c7989de8cd5b4aba67f"
+commit = "7732f9247f7436cd264a10a7e2a8a16c47a0fb57"
 
 [pins.dirty_booleans]
 url    = "https://github.com/mosteo/dirty_booleans"
@@ -83,7 +88,8 @@ commit = "60729edf31816aca0036b13b2794c39a9bd0172e"
 
 [pins.gnatcoll]
 url    = "https://github.com/alire-project/gnatcoll-core.git"
-commit = "4e663b87a028252e7e074f054f8f453661397166"
+commit = "40cb993cc0bdd84bd7c4d5ff0438380751497c16"
+
 [pins.lml]
 url    = "https://github.com/mosteo/lml_ada.git"
 commit = "3d79edaff98bc4985014c641327ceb22d655df6b"
@@ -96,13 +102,17 @@ commit = "9a9c660f9c6f27f5ef75417e7fac7061dff14d78"
 url    = "https://github.com/mosteo/optional.git"
 commit = "7b8132a09a6c3c467409ab15d34fac605b1e5711"
 
+[pins.resources]
+url    = "https://github.com/alire-project/resources"
+commit = "d3a83f35d7c0b586119fc19a568289cf21c87aa0"
+
 [pins.semantic_versioning]
 url    = "https://github.com/alire-project/semantic_versioning"
 commit = "4861e32bd8a2f0df038d3ecc9a72b6381e7a34cc"
 
 [pins.simple_logging]
 url    = "https://github.com/alire-project/simple_logging"
-commit = "3505dc645f3eef6799a486aae223d37e88cfc4d5"
+commit = "f45bf378588dc1d0479cc24eb0eb41dc99f69cb4"
 
 [pins.si_units]
 url    = "https://github.com/mosteo/si_units"
@@ -111,6 +121,11 @@ commit = "9329d2591b82440ccc859a53f1380ac07ea4194d"
 [pins.stopwatch]
 url    = "https://github.com/mosteo/stopwatch"
 commit = "f607a63b714f09bbf6126de9851cbc21cf8666c9"
+
+[pins.templates_parser]
+# We pin templates parser to avoid a spurious dependency on gnat>=14
+url    = "https://github.com/alire-project/templates-parser"
+commit = "441acdc3769469e348680d4afd1928022a4da36b"
 
 [pins.toml_slicer]
 url    = "https://github.com/mosteo/toml_slicer"
@@ -132,6 +147,15 @@ command = ["pwsh", "scripts/version-patcher.ps1"]
 [actions.'case(os)'.'...']
 type = "pre-build"
 command = ["scripts/version-patcher.sh"]
+
+# Before building, on Linux only, we regenerate resources. This is not needed
+# on other platforms as this is only to ensure that in the rare case of
+# template modification, the developer on Linux has not to regenerate manually
+# every time. For builds on GitHub, embedded templates should be up to date.
+[[actions]]
+[actions.'case(os)'.linux]
+type = "pre-build"
+command = ["support/embedder/embedder.sh"]
 
 [test]
 runner = "alire"

@@ -75,6 +75,9 @@ package Alire.Directories is
    function Find_Relative_Path_To (Path : Any_Path) return Any_Path;
    --  Same as Find_Relative_Path (Parent => Current, Child => Path)
 
+   function Exists (Path : Any_Path) return Boolean;
+   --  Path designates something, be it file, dir or symbolic link
+
    function Is_Directory (Path : Any_Path) return Boolean;
    --  Returns false for non-existing paths too
 
@@ -84,13 +87,21 @@ package Alire.Directories is
    procedure Merge_Contents (Src, Dst              : Any_Path;
                              Skip_Top_Level_Files  : Boolean;
                              Fail_On_Existing_File : Boolean;
-                             Remove_From_Source    : Boolean);
+                             Remove_From_Source    : Boolean;
+                             Silent                : Boolean := True);
    --  Move all contents from Src into Dst, recursively. Dirs already existing
    --  on Dst tree will be merged. For existing regular files, either log
    --  at debug level or fail. If Skip, discard files at the Src top-level.
    --  This is what we want when manually unpacking binary releases, as
    --  the top-level only contains "doinstall", "README" and so on that
    --  are unusable and would be confusing in a binary prefix.
+
+   procedure Rename (Source,
+                     Destination : Any_Path);
+   --  Renames files/directories. Will try first with a plain rename, and
+   --  fallback to copy/delete if rename fails. As we sometimes create
+   --  temporary files in user-supplied locations, depending on the underlying
+   --  move system call, these might fail across filesystems.
 
    procedure Touch (File : File_Path; Create_Tree : Boolean := False)
      with Pre => Create_Tree or else Is_Directory (Parent (File));
